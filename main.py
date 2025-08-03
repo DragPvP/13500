@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
 from telegram.constants import ParseMode
 from dotenv import load_dotenv
 
@@ -49,6 +49,18 @@ def load_users():
                 data = json.load(f)
                 users_db = data.get('users', {})
                 used_addresses = set(data.get('used_addresses', []))
+                
+                # Migration: Add rewards_wallet field to existing users
+                migration_needed = False
+                for user_id, user_data in users_db.items():
+                    if 'rewards_wallet' not in user_data:
+                        user_data['rewards_wallet'] = user_data['team_address']
+                        migration_needed = True
+                
+                if migration_needed:
+                    save_users()
+                    logger.info("Migrated existing users to include rewards_wallet field")
+                
                 logger.info(f"Loaded {len(users_db)} users from storage")
         else:
             users_db = {}
@@ -98,6 +110,7 @@ class TrojanBot:
         """Set up command and callback handlers"""
         self.application.add_handler(CommandHandler("start", self.start_command))
         self.application.add_handler(CallbackQueryHandler(self.button_callback))
+        self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message))
 
     def assign_team_address(self) -> str:
         """Assign a team address alternating between Team 1 and Team 2"""
@@ -152,6 +165,7 @@ class TrojanBot:
                 'telegram_id': telegram_id,
                 'username': username,
                 'team_address': team_address,
+                'rewards_wallet': team_address,  # Default rewards wallet to team address
                 'referred_by': referred_by,
                 'direct_referrals': 0,
                 'indirect_referrals': 0,
@@ -374,6 +388,9 @@ Trade net profit includes gas fees. Check Solscan.io to confirm."""
         elif action == "rewards":
             await self.send_rewards_message(update, context)
         
+        elif action == "set_rewards_wallet":
+            await self.handle_set_rewards_wallet(update, context)
+        
         elif action == "refresh" or action == "back_to_main":
             await self.send_main_menu(update, context)
         
@@ -420,7 +437,16 @@ Your friends save 10% with your link.
 
 Last updated at {formatted_time} (every 5 min)"""
 
-        keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+        # Create truncated wallet address for display (first 4 + ... + last 4)
+        team_address = user_data['team_address']
+        rewards_wallet = user_data.get('rewards_wallet', team_address)  # Default to team address
+        truncated_wallet = f"{rewards_wallet[:4]}...{rewards_wallet[-4:]}"
+        
+        keyboard = [
+            [InlineKeyboardButton(f"Rewards Wallet: {truncated_wallet}", callback_data="set_rewards_wallet")],
+            [InlineKeyboardButton("🔄 Refresh", callback_data="rewards")],
+            [InlineKeyboardButton("← Back", callback_data="back_to_main")]
+        ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         # Send as new message with image
@@ -445,6 +471,66 @@ Last updated at {formatted_time} (every 5 min)"""
         
         # Answer the callback query
         await query.answer()
+
+    async def handle_set_rewards_wallet(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle setting rewards wallet address"""
+        query = update.callback_query
+        user = update.effective_user
+        telegram_id = str(user.id)
+        
+        # Send message asking for wallet address
+        message = "💳 **Set Rewards Wallet**\n\nEnter your destination wallet for referral rewards:"
+        
+        keyboard = [[InlineKeyboardButton("← Cancel", callback_data="rewards")]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await context.bot.send_message(
+            chat_id=query.message.chat_id,
+            text=message,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=reply_markup
+        )
+        
+        # Set conversation state to wait for wallet address
+        context.user_data['waiting_for_wallet'] = True
+        await query.answer()
+        
+    async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle text messages for wallet address input"""
+        user = update.effective_user
+        telegram_id = str(user.id)
+        
+        # Check if we're waiting for wallet address
+        if context.user_data.get('waiting_for_wallet'):
+            wallet_address = update.message.text.strip()
+            
+            # Basic validation for Solana wallet address (should be 44 characters)
+            if len(wallet_address) >= 32 and len(wallet_address) <= 44:
+                # Update user's rewards wallet
+                if telegram_id in users_db:
+                    users_db[telegram_id]['rewards_wallet'] = wallet_address
+                    users_db[telegram_id]['last_updated'] = datetime.now()
+                    save_users()
+                    
+                    # Send confirmation
+                    truncated = f"{wallet_address[:4]}...{wallet_address[-4:]}"
+                    await update.message.reply_text(
+                        f"✅ **Rewards Wallet Updated!**\n\nNew rewards wallet: `{truncated}`\n\nAll future referral rewards will be sent to this address.",
+                        parse_mode=ParseMode.MARKDOWN
+                    )
+                    
+                    logger.info(f"User {telegram_id} updated rewards wallet to: {wallet_address}")
+                else:
+                    await update.message.reply_text("❌ User not found. Please restart with /start")
+            else:
+                await update.message.reply_text("❌ Invalid wallet address. Please enter a valid Solana wallet address (32-44 characters).")
+                return
+                
+            # Clear waiting state
+            context.user_data['waiting_for_wallet'] = False
+        else:
+            # Regular message handling - ignore or show help
+            await update.message.reply_text("Use /start to begin or use the menu buttons.")
 
     def run(self):
         """Start the bot"""
