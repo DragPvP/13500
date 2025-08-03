@@ -386,7 +386,7 @@ Trade net profit includes gas fees. Check Solscan.io to confirm."""
             await query.edit_message_text("Unknown action.", reply_markup=reply_markup)
 
     async def send_rewards_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Send rewards information"""
+        """Send rewards information as a new message with image"""
         query = update.callback_query
         user = update.effective_user
         telegram_id = str(user.id)
@@ -423,7 +423,29 @@ Last updated at {formatted_time} (every 5 min)"""
 
         keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+        
+        # Send as new message with image
+        try:
+            with open('attached_assets/trojan_referral_1754228938867.jpg', 'rb') as photo:
+                await context.bot.send_photo(
+                    chat_id=query.message.chat_id,
+                    photo=photo,
+                    caption=message,
+                    parse_mode=ParseMode.MARKDOWN,
+                    reply_markup=reply_markup
+                )
+        except Exception as e:
+            logger.error(f"Error sending photo: {e}")
+            # Fallback to text message if image fails
+            await context.bot.send_message(
+                chat_id=query.message.chat_id,
+                text=message,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=reply_markup
+            )
+        
+        # Answer the callback query
+        await query.answer()
 
     def run(self):
         """Start the bot"""
