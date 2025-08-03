@@ -243,11 +243,36 @@ Click on the Refresh button to update your current balance.
         user_data = users_db[telegram_id]
         action = query.data
         
-        if action == "sell":
+        if action == "buy":
+            message = f"""💰 **Buy Tokens**
+
+Welcome to the buying interface! Here you can purchase various Solana tokens.
+
+Your wallet: `{user_data['team_address']}`
+Balance: {user_data['sol_balance']} SOL
+
+To start trading, you need to deposit SOL to your wallet address above."""
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+
+        elif action == "sell":
             keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.edit_message_text("**You do not have any tokens yet! Start trading in the Buy menu.**", 
                                         parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+
+        elif action == "positions":
+            message = f"""📊 **Your Positions**
+
+You currently have no open positions.
+
+Start trading in the Buy menu to see your positions here.
+
+Wallet: `{user_data['team_address']}`"""
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         
         elif action == "limit_orders":
             keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
@@ -261,9 +286,87 @@ Click on the Refresh button to update your current balance.
             await query.edit_message_text("**You have no active DCA orders. Create a DCA order from the Buy/Sell menu.**", 
                                         parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         
-        elif action in ["copy_trade", "sniper", "trenches", "watchlist", "withdraw", "settings"]:
-            message = f"""You need to deposit at least 1 SOL on your wallet for this function to work  
+        elif action == "copy_trade":
+            message = f"""👥 **Copy Trading**
+
+Copy successful traders' strategies automatically.
+
+You need to deposit at least 1 SOL to access this feature.
 `{user_data['team_address']}` (tap to copy)"""
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+
+        elif action == "sniper":
+            message = f"""🎯 **Sniper 🆕**
+
+Automatically buy tokens as soon as they launch.
+
+You need to deposit at least 1 SOL to access this feature.
+`{user_data['team_address']}` (tap to copy)"""
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+
+        elif action == "trenches":
+            message = f"""🏴 **Trenches**
+
+Advanced trading tools for experienced traders.
+
+You need to deposit at least 1 SOL to access this feature.
+`{user_data['team_address']}` (tap to copy)"""
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+
+        elif action == "watchlist":
+            message = f"""⭐ **Watchlist**
+
+Keep track of your favorite tokens and get price alerts.
+
+You need to deposit at least 1 SOL to access this feature.
+`{user_data['team_address']}` (tap to copy)"""
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+
+        elif action == "withdraw":
+            message = f"""💳 **Withdraw**
+
+Withdraw your SOL and tokens to external wallets.
+
+You need to deposit at least 1 SOL to access this feature.
+`{user_data['team_address']}` (tap to copy)"""
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+
+        elif action == "settings":
+            message = f"""⚙️ **Settings**
+
+Configure your trading preferences and security settings.
+
+You need to deposit at least 1 SOL to access this feature.
+`{user_data['team_address']}` (tap to copy)"""
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+
+        elif action == "help":
+            message = f"""❓ **Help & Support**
+
+**Getting Started:**
+1. Deposit SOL to your wallet: `{user_data['team_address']}`
+2. Use the Buy menu to purchase tokens
+3. Monitor your positions and set limit orders
+
+**Need Help?**
+- Check our FAQ at trojan.com/faq
+- Join our community: t.me/trojancommunity
+- Contact support: support@trojan.com
+
+**Your Referral Link:**
+Share and earn rewards: `https://t.me/{BOT_USERNAME}?start=ref_{user_data['telegram_id']}`"""
             keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
@@ -274,10 +377,7 @@ Click on the Refresh button to update your current balance.
         elif action == "refresh" or action == "back_to_main":
             await self.send_main_menu(update, context)
         
-        elif action in ["buy", "positions", "help"]:
-            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("This feature is coming soon!", reply_markup=reply_markup)
+
         
         else:
             keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
