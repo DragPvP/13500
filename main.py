@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""
+Trojan Telegram Bot - Solana Trading Interface Simulator
+A Telegram bot that simulates Trojan's Solana trading interface with team address assignment and referral system.
+"""
+
 import logging
 import os
 import random
@@ -139,30 +144,30 @@ Click on the Refresh button to update your current balance.
 
         keyboard = [
             [
-                InlineKeyboardButton("💰 Buy", callback_data="buy"),
-                InlineKeyboardButton("💸 Sell", callback_data="sell")
+                InlineKeyboardButton("Buy", callback_data="buy"),
+                InlineKeyboardButton("Sell", callback_data="sell")
             ],
             [
-                InlineKeyboardButton("📊 Positions", callback_data="positions"),
-                InlineKeyboardButton("📋 Limit Orders", callback_data="limit_orders"),
-                InlineKeyboardButton("🔄 DCA Orders", callback_data="dca_orders")
+                InlineKeyboardButton("Positions", callback_data="positions"),
+                InlineKeyboardButton("Limit Orders", callback_data="limit_orders"),
+                InlineKeyboardButton("DCA Orders", callback_data="dca_orders")
             ],
             [
-                InlineKeyboardButton("👥 Copy Trade", callback_data="copy_trade"),
-                InlineKeyboardButton("🎯 Sniper 🆕", callback_data="sniper")
+                InlineKeyboardButton("Copy Trade", callback_data="copy_trade"),
+                InlineKeyboardButton("Sniper 🆕", callback_data="sniper")
             ],
             [
-                InlineKeyboardButton("🏴 Trenches", callback_data="trenches"),
+                InlineKeyboardButton("Trenches", callback_data="trenches"),
                 InlineKeyboardButton("💰 Rewards", callback_data="rewards"),
                 InlineKeyboardButton("⭐ Watchlist", callback_data="watchlist")
             ],
             [
-                InlineKeyboardButton("💳 Withdraw", callback_data="withdraw"),
-                InlineKeyboardButton("⚙️ Settings", callback_data="settings")
+                InlineKeyboardButton("Withdraw", callback_data="withdraw"),
+                InlineKeyboardButton("Settings", callback_data="settings")
             ],
             [
-                InlineKeyboardButton("❓ Help", callback_data="help"),
-                InlineKeyboardButton("🔄 Refresh", callback_data="refresh")
+                InlineKeyboardButton("Help", callback_data="help"),
+                InlineKeyboardButton("Refresh", callback_data="refresh")
             ]
         ]
         
@@ -266,6 +271,7 @@ def main():
         logger.error(f"Configuration error: {e}")
         print(f"Error: {e}")
         print("Please set BOT_TOKEN environment variable with your Telegram bot token")
+        print("You can create a bot by messaging @BotFather on Telegram")
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         print(f"Unexpected error: {e}")
