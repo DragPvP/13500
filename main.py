@@ -7,6 +7,7 @@ A Telegram bot that simulates Trojan's Solana trading interface with team addres
 import logging
 import os
 import random
+import json
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -34,15 +35,52 @@ TEAMS = {
 # Bot username for referral links
 BOT_USERNAME = os.getenv('BOT_USERNAME', 'Thanatos_TrojanBot')
 
-# In-memory storage for users
+# File-based storage for users
+USER_DATA_FILE = "users.json"
 users_db: Dict[str, Dict] = {}
 used_addresses = set()
+
+def load_users():
+    """Load users from JSON file"""
+    global users_db, used_addresses
+    try:
+        if os.path.exists(USER_DATA_FILE):
+            with open(USER_DATA_FILE, 'r') as f:
+                data = json.load(f)
+                users_db = data.get('users', {})
+                used_addresses = set(data.get('used_addresses', []))
+                logger.info(f"Loaded {len(users_db)} users from storage")
+        else:
+            users_db = {}
+            used_addresses = set()
+            logger.info("No existing user data found, starting fresh")
+    except Exception as e:
+        logger.error(f"Error loading users: {e}")
+        users_db = {}
+        used_addresses = set()
+
+def save_users():
+    """Save users to JSON file"""
+    try:
+        data = {
+            'users': users_db,
+            'used_addresses': list(used_addresses),
+            'last_updated': datetime.now().isoformat()
+        }
+        with open(USER_DATA_FILE, 'w') as f:
+            json.dump(data, f, indent=2, default=str)
+        logger.info(f"Saved {len(users_db)} users to storage")
+    except Exception as e:
+        logger.error(f"Error saving users: {e}")
 
 class TrojanBot:
     def __init__(self):
         self.token = os.getenv('BOT_TOKEN')
         if not self.token:
             raise ValueError("BOT_TOKEN environment variable is required")
+        
+        # Load existing user data
+        load_users()
         
         # Build application with better error handling and conflict resolution
         self.application = (
@@ -126,6 +164,9 @@ class TrojanBot:
                 'last_updated': datetime.now()
             }
             
+            # Save to file
+            save_users()
+            
             logger.info(f"New user registered: {telegram_id} ({username}) with team address: {team_address}")
         
         # Send main menu
@@ -203,30 +244,45 @@ Click on the Refresh button to update your current balance.
         action = query.data
         
         if action == "sell":
-            await query.edit_message_text("**You do not have any tokens yet! Start trading in the Buy menu.**", parse_mode=ParseMode.MARKDOWN)
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text("**You do not have any tokens yet! Start trading in the Buy menu.**", 
+                                        parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         
         elif action == "limit_orders":
-            await query.edit_message_text("**You have no active limit orders. Create a limit order from the Buy/Sell menu.**", parse_mode=ParseMode.MARKDOWN)
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text("**You have no active limit orders. Create a limit order from the Buy/Sell menu.**", 
+                                        parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         
         elif action == "dca_orders":
-            await query.edit_message_text("**You have no active DCA orders. Create a DCA order from the Buy/Sell menu.**", parse_mode=ParseMode.MARKDOWN)
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text("**You have no active DCA orders. Create a DCA order from the Buy/Sell menu.**", 
+                                        parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         
         elif action in ["copy_trade", "sniper", "trenches", "watchlist", "withdraw", "settings"]:
             message = f"""You need to deposit at least 1 SOL on your wallet for this function to work  
 `{user_data['team_address']}` (tap to copy)"""
-            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN)
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         
         elif action == "rewards":
             await self.send_rewards_message(update, context)
         
-        elif action == "refresh":
+        elif action == "refresh" or action == "back_to_main":
             await self.send_main_menu(update, context)
         
         elif action in ["buy", "positions", "help"]:
-            await query.edit_message_text("This feature is coming soon!")
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text("This feature is coming soon!", reply_markup=reply_markup)
         
         else:
-            await query.edit_message_text("Unknown action.")
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text("Unknown action.", reply_markup=reply_markup)
 
     async def send_rewards_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Send rewards information"""
@@ -264,7 +320,9 @@ Your friends save 10% with your link.
 
 Last updated at {formatted_time} (every 5 min)"""
 
-        await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN)
+        keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
 
     def run(self):
         """Start the bot"""
