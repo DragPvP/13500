@@ -462,8 +462,8 @@ Last updated at {formatted_time} (every 5 min)"""
         truncated_wallet = f"{rewards_wallet[:4]}...{rewards_wallet[-4:]}"
         
         keyboard = [
+            [InlineKeyboardButton("Refresh", callback_data="rewards")],
             [InlineKeyboardButton(f"Rewards Wallet: {truncated_wallet}", callback_data="set_rewards_wallet")],
-            [InlineKeyboardButton("🔄 Refresh", callback_data="rewards")],
             [InlineKeyboardButton("← Back", callback_data="back_to_main")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -522,20 +522,20 @@ Click on the Refresh button to update your current balance.
             ],
             [
                 InlineKeyboardButton("Copy Trade", callback_data="copy_trade"),
-                InlineKeyboardButton("Sniper 🆕", callback_data="sniper"),
-                InlineKeyboardButton("Trenches", callback_data="trenches")
+                InlineKeyboardButton("Sniper 🆕", callback_data="sniper")
             ],
             [
+                InlineKeyboardButton("Trenches", callback_data="trenches"),
                 InlineKeyboardButton("💰 Rewards", callback_data="rewards"),
                 InlineKeyboardButton("⭐ Watchlist", callback_data="watchlist")
             ],
             [
                 InlineKeyboardButton("Withdraw", callback_data="withdraw"),
-                InlineKeyboardButton("Settings", callback_data="settings"),
-                InlineKeyboardButton("Help", callback_data="help")
+                InlineKeyboardButton("Settings", callback_data="settings")
             ],
             [
-                InlineKeyboardButton("🔄 Refresh", callback_data="refresh")
+                InlineKeyboardButton("Help", callback_data="help"),
+                InlineKeyboardButton("Refresh", callback_data="refresh")
             ]
         ])
 
@@ -578,7 +578,7 @@ Last updated at {formatted_time} (every 5 min)"""
         
         keyboard = [
             [InlineKeyboardButton(f"Rewards Wallet: {truncated_wallet}", callback_data="set_rewards_wallet")],
-            [InlineKeyboardButton("🔄 Refresh", callback_data="rewards")],
+            [InlineKeyboardButton("Refresh", callback_data="rewards")],
             [InlineKeyboardButton("← Back", callback_data="back_to_main")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
