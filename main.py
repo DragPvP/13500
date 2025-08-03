@@ -44,7 +44,16 @@ class TrojanBot:
         if not self.token:
             raise ValueError("BOT_TOKEN environment variable is required")
         
-        self.application = Application.builder().token(self.token).build()
+        # Build application with better error handling and conflict resolution
+        self.application = (
+            Application.builder()
+            .token(self.token)
+            .read_timeout(30)
+            .write_timeout(30)
+            .connect_timeout(30)
+            .pool_timeout(30)
+            .build()
+        )
         self.setup_handlers()
 
     def setup_handlers(self):
@@ -260,7 +269,16 @@ Last updated at {formatted_time} (every 5 min)"""
     def run(self):
         """Start the bot"""
         logger.info("Starting Trojan Telegram Bot...")
-        self.application.run_polling(allowed_updates=Update.ALL_TYPES)
+        try:
+            self.application.run_polling(
+                allowed_updates=Update.ALL_TYPES,
+                drop_pending_updates=True,  # Clear any pending updates
+                timeout=30,
+                poll_interval=2.0
+            )
+        except Exception as e:
+            logger.error(f"Bot polling error: {e}")
+            raise
 
 def main():
     """Main function"""
