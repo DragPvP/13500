@@ -347,20 +347,27 @@ You need to deposit at least 1 SOL to access this feature.
             await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
 
         elif action == "help":
-            message = f"""❓ **Help & Support**
+            message = """**Where can I find my referral code?**  
+Open the /start menu and click 💰Referrals.
 
-**Getting Started:**
-1. Deposit SOL to your wallet: `{user_data['team_address']}`
-2. Use the Buy menu to purchase tokens
-3. Monitor your positions and set limit orders
+**What are the fees for using Trojan?**  
+Successful transactions through Trojan incur a fee of 0.9% if you were referred by another user. We don't charge a subscription fee or pay-wall any features.
 
-**Need Help?**
-- Check our FAQ at trojan.com/faq
-- Join our community: t.me/trojancommunity
-- Contact support: support@trojan.com
+**Security Tips: How can I protect my account from scammers?**  
+- Safeguard does NOT require you to login with a phone number or QR code!  
+- NEVER search for bots in Telegram. Use only official links.  
+- Admins and Mods NEVER DM first or send links. Stay safe!
 
-**Your Referral Link:**
-Share and earn rewards: `https://t.me/{BOT_USERNAME}?start=ref_{user_data['telegram_id']}`"""
+**Extra Protection:**  
+Setup your Secure Action Password (SAP) in the Settings menu. You'll need this password to withdraw, export keys, or delete a wallet. It is NOT recoverable, so set a hint.
+
+**Trading Tips: Common Failure Reasons**  
+- Slippage Exceeded: Increase slippage or reduce your order size.  
+- Insufficient Balance: Add SOL or reduce the transaction amount.  
+- Timeout: Can happen under high network load. Try higher gas tip.
+
+**PNL seems wrong?**  
+Trade net profit includes gas fees. Check Solscan.io to confirm."""
             keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
