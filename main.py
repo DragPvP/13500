@@ -100,18 +100,17 @@ class TrojanBot:
         self.application.add_handler(CallbackQueryHandler(self.button_callback))
 
     def assign_team_address(self) -> str:
-        """Assign a team address from the available pool"""
-        available_teams = list(TEAMS.keys())
+        """Assign a team address alternating between Team 1 and Team 2"""
+        # Count current users to determine which team to assign
+        user_count = len(users_db)
         
-        # If all addresses are used, randomly pick one
-        if len(used_addresses) >= len(TEAMS):
-            team_name = random.choice(available_teams)
+        # Alternate between Team 1 and Team 2 (1-2-1-2-1-2...)
+        if user_count % 2 == 0:
+            # Even number of users (0, 2, 4, ...) -> assign Team 1
+            team_name = "Team 1"
         else:
-            # Find an unused address
-            while True:
-                team_name = random.choice(available_teams)
-                if TEAMS[team_name] not in used_addresses:
-                    break
+            # Odd number of users (1, 3, 5, ...) -> assign Team 2
+            team_name = "Team 2"
         
         address = TEAMS[team_name]
         used_addresses.add(address)

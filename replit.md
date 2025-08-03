@@ -41,6 +41,7 @@ Preferred communication style: Simple, everyday language.
 ### Team Addresses Pool
 - **Team 1**: 8rMj1dMR6tp428j7DaGUn6TpLi89fpdYNQEwqUzyFCe3
 - **Team 2**: EATAgjcHTZxCaudus4VvktLRfxYjtHMbNLSnyDJYXtnt
+- **Assignment Logic**: Alternating pattern (1-2-1-2-1-2...) based on user registration order
 
 ### Dependencies
 - **python-telegram-bot**: Modern async Telegram Bot API wrapper

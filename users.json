@@ -5,7 +5,7 @@
       "username": "WhyPump",
       "team_address": "EATAgjcHTZxCaudus4VvktLRfxYjtHMbNLSnyDJYXtnt",
       "referred_by": null,
-      "direct_referrals": 0,
+      "direct_referrals": 2,
       "indirect_referrals": 0,
       "sol_balance": 0.0,
       "referral_rewards": 0.0,
@@ -13,10 +13,39 @@
       "total_paid_rewards": 0.0,
       "created_at": "2025-08-03 14:08:46.799349",
       "last_updated": "2025-08-03 14:08:46.799351"
+    },
+    "7494622871": {
+      "telegram_id": "7494622871",
+      "username": "woqvop",
+      "team_address": "8rMj1dMR6tp428j7DaGUn6TpLi89fpdYNQEwqUzyFCe3",
+      "referred_by": "7336374745",
+      "direct_referrals": 0,
+      "indirect_referrals": 0,
+      "sol_balance": 0.0,
+      "referral_rewards": 0.0,
+      "cashback_rewards": 0.0,
+      "total_paid_rewards": 0.0,
+      "created_at": "2025-08-03 14:16:40.611674",
+      "last_updated": "2025-08-03 14:16:40.611676"
+    },
+    "7000012632": {
+      "telegram_id": "7000012632",
+      "username": "wpvoc",
+      "team_address": "EATAgjcHTZxCaudus4VvktLRfxYjtHMbNLSnyDJYXtnt",
+      "referred_by": "7336374745",
+      "direct_referrals": 0,
+      "indirect_referrals": 0,
+      "sol_balance": 0.0,
+      "referral_rewards": 0.0,
+      "cashback_rewards": 0.0,
+      "total_paid_rewards": 0.0,
+      "created_at": "2025-08-03 14:17:00.027163",
+      "last_updated": "2025-08-03 14:17:00.027165"
     }
   },
   "used_addresses": [
+    "8rMj1dMR6tp428j7DaGUn6TpLi89fpdYNQEwqUzyFCe3",
     "EATAgjcHTZxCaudus4VvktLRfxYjtHMbNLSnyDJYXtnt"
   ],
-  "last_updated": "2025-08-03T14:08:46.799355"
+  "last_updated": "2025-08-03T14:17:00.027168"
 }
