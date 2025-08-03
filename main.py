@@ -257,15 +257,17 @@ Click on the Refresh button to update your current balance.
         action = query.data
         
         if action == "buy":
-        message = f"""⚠️ **You need to deposit at least 0.4 SOL on your wallet for this function to work**  
-        `{user_data['team_address']}` (tap to copy)"""
-    
-        keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-    
-        await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+            message = f"""💰 **Buy Tokens**
 
+Welcome to the buying interface! Here you can purchase various Solana tokens.
 
+Your wallet: `{user_data['team_address']}`
+Balance: {user_data['sol_balance']} SOL
+
+To start trading, you need to deposit SOL to your wallet address above."""
+            keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
 
         elif action == "sell":
             keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
