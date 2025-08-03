@@ -263,16 +263,10 @@ To start trading, you need to deposit SOL to your wallet address above."""
                                         parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
 
         elif action == "positions":
-            message = f"""📊 **Your Positions**
-
-You currently have no open positions.
-
-Start trading in the Buy menu to see your positions here.
-
-Wallet: `{user_data['team_address']}`"""
             keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+            await query.edit_message_text("**You do not have any tokens yet! Start trading in the Buy menu.**", 
+                                        parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         
         elif action == "limit_orders":
             keyboard = [[InlineKeyboardButton("← Back", callback_data="back_to_main")]]
