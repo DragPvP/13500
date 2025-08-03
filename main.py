@@ -386,13 +386,32 @@ Trade net profit includes gas fees. Check Solscan.io to confirm."""
             await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
         
         elif action == "rewards":
+            # Delete the current message if it exists
+            try:
+                await query.delete_message()
+            except:
+                pass  # Ignore if message can't be deleted
             await self.send_rewards_message(update, context)
         
         elif action == "set_rewards_wallet":
             await self.handle_set_rewards_wallet(update, context)
         
         elif action == "refresh" or action == "back_to_main":
-            await self.send_main_menu(update, context)
+            # For back button, send new main menu message instead of editing
+            if action == "back_to_main":
+                try:
+                    await query.delete_message()
+                except:
+                    pass  # Ignore if message can't be deleted
+                await context.bot.send_message(
+                    chat_id=query.message.chat_id,
+                    text=await self.get_main_menu_text(query.from_user.id),
+                    parse_mode=ParseMode.MARKDOWN,
+                    reply_markup=self.get_main_menu_keyboard()
+                )
+                await query.answer()
+            else:
+                await self.send_main_menu(update, context)
         
 
         
@@ -472,6 +491,118 @@ Last updated at {formatted_time} (every 5 min)"""
         # Answer the callback query
         await query.answer()
 
+    async def get_main_menu_text(self, user_id: int) -> str:
+        """Get main menu text for a user"""
+        telegram_id = str(user_id)
+        if telegram_id not in users_db:
+            return "Please restart the bot with /start"
+        
+        user_data = users_db[telegram_id]
+        team_address = user_data['team_address']
+        sol_balance = user_data['sol_balance']
+        
+        return f"""Solana • 🅴 `{team_address}` (Tap to Copy)  
+Balance: {sol_balance} SOL ($0.00)
+
+Click on the Refresh button to update your current balance.
+
+⚠️We have no control over ads shown by Telegram in this bot. Do not be scammed by fake airdrops or login pages."""
+
+    def get_main_menu_keyboard(self):
+        """Get main menu keyboard"""
+        return InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("Buy", callback_data="buy"),
+                InlineKeyboardButton("Sell", callback_data="sell")
+            ],
+            [
+                InlineKeyboardButton("Positions", callback_data="positions"),
+                InlineKeyboardButton("Limit Orders", callback_data="limit_orders"),
+                InlineKeyboardButton("DCA Orders", callback_data="dca_orders")
+            ],
+            [
+                InlineKeyboardButton("Copy Trade", callback_data="copy_trade"),
+                InlineKeyboardButton("Sniper 🆕", callback_data="sniper"),
+                InlineKeyboardButton("Trenches", callback_data="trenches")
+            ],
+            [
+                InlineKeyboardButton("💰 Rewards", callback_data="rewards"),
+                InlineKeyboardButton("⭐ Watchlist", callback_data="watchlist")
+            ],
+            [
+                InlineKeyboardButton("Withdraw", callback_data="withdraw"),
+                InlineKeyboardButton("Settings", callback_data="settings"),
+                InlineKeyboardButton("Help", callback_data="help")
+            ],
+            [
+                InlineKeyboardButton("🔄 Refresh", callback_data="refresh")
+            ]
+        ])
+
+    async def send_rewards_message_direct(self, update: Update, context: ContextTypes.DEFAULT_TYPE, telegram_id: str):
+        """Send rewards message directly (for wallet update)"""
+        user_data = users_db[telegram_id]
+        
+        now = datetime.now()
+        formatted_time = now.strftime("%Y-%m-%d %H:%M") + " UTC"
+        
+        total_unpaid = user_data['referral_rewards'] + user_data['cashback_rewards']
+        total_referred = user_data['direct_referrals'] + user_data['indirect_referrals']
+        
+        message = f"""Cashback and Referral Rewards are paid out **every 12 hours** and airdropped directly to your Rewards Wallet. To be eligible, you must have at least 0.005 SOL in unpaid rewards.
+
+**All Trojan users now enjoy a 10% boost to referral rewards and 20% cashback on trading fees.**
+
+Referral Rewards  
+• Users referred: {total_referred}
+• Direct: {user_data['direct_referrals']}, Indirect: {user_data['indirect_referrals']}  
+• Earned rewards: {user_data['referral_rewards']:.3f} SOL ($0.00)
+
+Cashback Rewards  
+• Earned rewards: {user_data['cashback_rewards']:.3f} SOL ($0.00)
+
+Total Rewards  
+• Total paid: {user_data['total_paid_rewards']:.3f} SOL ($0.00)  
+• Total unpaid: {total_unpaid:.3f} SOL ($0.00)
+
+**Your Referral Link**
+`https://t.me/{BOT_USERNAME}?start=ref_{telegram_id}`
+Your friends save 10% with your link.
+
+Last updated at {formatted_time} (every 5 min)"""
+
+        # Create truncated wallet address for display (first 4 + ... + last 4)
+        team_address = user_data['team_address']
+        rewards_wallet = user_data.get('rewards_wallet', team_address)
+        truncated_wallet = f"{rewards_wallet[:4]}...{rewards_wallet[-4:]}"
+        
+        keyboard = [
+            [InlineKeyboardButton(f"Rewards Wallet: {truncated_wallet}", callback_data="set_rewards_wallet")],
+            [InlineKeyboardButton("🔄 Refresh", callback_data="rewards")],
+            [InlineKeyboardButton("← Back", callback_data="back_to_main")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        # Send as new message with image
+        try:
+            with open('attached_assets/trojan_referral_1754228938867.jpg', 'rb') as photo:
+                await context.bot.send_photo(
+                    chat_id=update.message.chat_id,
+                    photo=photo,
+                    caption=message,
+                    parse_mode=ParseMode.MARKDOWN,
+                    reply_markup=reply_markup
+                )
+        except Exception as e:
+            logger.error(f"Error sending photo: {e}")
+            # Fallback to text message if image fails
+            await context.bot.send_message(
+                chat_id=update.message.chat_id,
+                text=message,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=reply_markup
+            )
+
     async def handle_set_rewards_wallet(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle setting rewards wallet address"""
         query = update.callback_query
@@ -512,14 +643,10 @@ Last updated at {formatted_time} (every 5 min)"""
                     users_db[telegram_id]['last_updated'] = datetime.now()
                     save_users()
                     
-                    # Send confirmation
-                    truncated = f"{wallet_address[:4]}...{wallet_address[-4:]}"
-                    await update.message.reply_text(
-                        f"✅ **Rewards Wallet Updated!**\n\nNew rewards wallet: `{truncated}`\n\nAll future referral rewards will be sent to this address.",
-                        parse_mode=ParseMode.MARKDOWN
-                    )
-                    
                     logger.info(f"User {telegram_id} updated rewards wallet to: {wallet_address}")
+                    
+                    # Send rewards message directly instead of confirmation
+                    await self.send_rewards_message_direct(update, context, telegram_id)
                 else:
                     await update.message.reply_text("❌ User not found. Please restart with /start")
             else:
